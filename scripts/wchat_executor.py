@@ -56,7 +56,7 @@ def wchat_binary():
             return found
     if explicit:
         raise WchatUnavailable("WCHAT_BIN cannot be executed: " + selected + "; refusing PATH fallback")
-    raise WchatUnavailable("chưa cài wchat: không tìm thấy wchat trong PATH")
+    raise WchatUnavailable("wchat not installed: no wchat found in PATH")
 
 
 def invoke(binary, *args, stdin=None, timeout=None):
@@ -103,11 +103,11 @@ def parse_json(raw):
     try:
         value = json.loads(raw)
     except (UnicodeError, ValueError):
-        return None, "wchat trả JSON không hợp lệ"
+        return None, "wchat returned invalid JSON"
     if not isinstance(value, dict):
-        return None, "wchat trả JSON không phải object"
+        return None, "wchat returned JSON that is not an object"
     if type(value.get("schema")) is not int or value["schema"] != KNOWN_SCHEMA:
-        return None, "wchat trả hợp đồng schema {!r}, cần cập nhật wchat-executor".format(value.get("schema"))
+        return None, "wchat returned unknown schema {!r}, update wchat-executor".format(value.get("schema"))
     return value, None
 
 
@@ -115,7 +115,7 @@ def fetch(binary, *args):
     try:
         response = invoke(binary, "run", *args, "--json")
     except OSError as exc:
-        return None, error("không chạy được wchat: " + str(exc))
+        return None, error("cannot run wchat: " + str(exc))
     if response.returncode:
         output(response.stderr, sys.stderr)
         return None, response.returncode
@@ -126,9 +126,9 @@ def fetch(binary, *args):
 
 
 def uncertain_start(workspace, problem):
-    print("Chưa xác định có run hay không: " + problem)
+    print("Run existence unconfirmed: " + problem)
     command = "python3 {} status".format(shlex.quote(str(Path(__file__).resolve())))
-    print("Kiểm tra trong workspace đã dùng; KHÔNG tự giao lại:")
+    print("Check in the workspace that was used; do NOT re-dispatch:")
     print("cd {} && {}".format(shlex.quote(workspace), command))
     print("WCHAT_START=unknown")
     return 1
@@ -140,7 +140,7 @@ def exec_run(args, agent_flags):
         try:
             task = open(args.task_file, "rb")
         except OSError as exc:
-            return error("không đọc được tệp việc: " + str(exc))
+            return error("cannot read task file: " + str(exc))
     else:
         task = None
     try:
@@ -155,7 +155,7 @@ def exec_run(args, agent_flags):
         if rc:
             return rc
         if previous.get("provider") != args.provider:
-            return error("provider của run {!r} là {!r}, không khớp {!r}; không resume".format(
+            return error("run {!r} provider is {!r}, does not match {!r}; not resuming".format(
                 args.resume, previous.get("provider"), args.provider))
 
     command = ["run", "start", *agent_flags, "--provider", args.provider,
@@ -174,7 +174,7 @@ def exec_run(args, agent_flags):
             try:
                 os.unlink(args.task_file)
             except OSError as exc:
-                print("Không xoá được tệp việc: " + str(exc), file=sys.stderr)
+                print("Could not remove task file: " + str(exc), file=sys.stderr)
 
     if response.returncode:
         if b"start unconfirmed" in response.stderr.lower():
@@ -187,10 +187,10 @@ def exec_run(args, agent_flags):
         return uncertain_start(workspace, problem)
     identity = value.get("run")
     if not isinstance(identity, str) or not RUN_ID.fullmatch(identity):
-        return uncertain_start(workspace, "wchat không trả run id hợp lệ")
+        return uncertain_start(workspace, "wchat did not return a valid run id")
     if response.stderr:
         output(response.stderr, sys.stderr)  # Warnings are never parsed as JSON.
-    print("Đã tạo run {} trong {}".format(identity, workspace))
+    print("Created run {} in {}".format(identity, workspace))
     print("WCHAT_START=created RUN=" + identity)
     return 0
 
@@ -201,7 +201,7 @@ def status_run(args):
         value, rc = fetch(binary, "status", args.run)
         if rc:
             return rc
-        print("Run: {}\nTrạng thái: {}\nProvider: {}\nWorkspace: {}".format(
+        print("Run: {}\nStatus: {}\nProvider: {}\nWorkspace: {}".format(
             value.get("run"), value.get("status"), value.get("provider"), value.get("workspace")))
         return 0
     value, rc = fetch(binary, "list")
@@ -210,7 +210,7 @@ def status_run(args):
     workspace = os.path.realpath(os.getcwd())
     runs = value.get("runs")
     if not isinstance(runs, list):
-        return error("wchat trả danh sách run không hợp lệ")
+        return error("wchat returned an invalid run list")
     for item in runs:  # wchat's newest-first order is authoritative.
         if not isinstance(item, dict) or not isinstance(item.get("workspace"), str):
             continue
@@ -227,33 +227,33 @@ def wait_run(args):
     try:
         response = invoke_interruptible(binary, *command)
     except OSError as exc:
-        return error("không chạy được wchat: " + str(exc))
+        return error("cannot run wchat: " + str(exc))
     if response.stderr:
         output(response.stderr, sys.stderr)
     if not response.stdout:
-        return response.returncode or error("wchat wait không trả JSON")
+        return response.returncode or error("wchat wait returned no JSON")
     value, problem = parse_json(response.stdout)
     if problem:
         return error(problem)
-    print("Run: {}\nTrạng thái: {}\nMã thoát: {}".format(
+    print("Run: {}\nStatus: {}\nExit code: {}".format(
         value.get("run"), value.get("status"), response.returncode))
     if response.returncode == 7:
-        print("Vẫn đang chạy; chưa phải trạng thái kết thúc. Kiểm tra: status {} hoặc wait {}".format(
+        print("Still running; not a terminal state. Check: status {} or wait {}".format(
             args.run, args.run))
     elif value.get("status") in ("retryable", "stopped"):
         provider = value.get("provider")
         if isinstance(provider, str) and PROVIDER.fullmatch(provider):
-            print("Có thể tiếp tục thủ công: exec --provider {} --resume {}".format(provider, args.run))
+            print("Can resume manually: exec --provider {} --resume {}".format(provider, args.run))
         else:
-            print("Kiểm tra provider trước khi tiếp tục run {}".format(args.run))
+            print("Check the provider before resuming run {}".format(args.run))
     elif value.get("status") == "needs_human":
-        print("Cần người kiểm tra hội thoại trước; nếu chắc lượt/thao tác chưa có tác dụng thì tiếp tục thủ công: "
-              "exec --provider {} --resume {}. Không tự giao lại.".format(value.get("provider"), args.run))
+        print("Needs a human to check the conversation first; if you are sure the turn/action had no effect, resume manually: "
+              "exec --provider {} --resume {}. Do not re-dispatch.".format(value.get("provider"), args.run))
     elif value.get("status") == "rate_limited":
-        print("Provider giới hạn lượt; run này không resume được — giao một run mới bằng exec khi muốn. "
-              "Không tự giao lại.")
+        print("Provider rate-limited; this run cannot be resumed — dispatch a new run with exec when you want. "
+              "Do not re-dispatch.")
     else:
-        print("Kiểm tra kết quả: result {}".format(args.run))
+        print("Check the result: result {}".format(args.run))
     return response.returncode
 
 
@@ -262,7 +262,7 @@ def result_run(args):
     value, rc = fetch(binary, "result", args.run)
     if rc:
         return rc
-    print("Trạng thái: {} (run {})".format(value.get("status"), value.get("run")))
+    print("Status: {} (run {})".format(value.get("status"), value.get("run")))
     git = value.get("git") if isinstance(value.get("git"), dict) else {}
     print("Commit:")
     commits = git.get("commits")
@@ -272,30 +272,30 @@ def result_run(args):
                 if isinstance(item, dict):
                     print("  {} {}".format(item.get("sha"), item.get("subject")))
         else:
-            print("  không có commit")
+            print("  no commit")
     else:
-        print("  không xác định: {}".format(git.get("error") or "không có bằng chứng Git"))
+        print("  unknown: {}".format(git.get("error") or "no Git evidence"))
     if git.get("bounded") is False:
-        print("  chưa có ranh giới cuối (bounded: false)")
-    print("Lệnh shell:")
+        print("  no final boundary yet (bounded: false)")
+    print("Shell commands:")
     shell = value.get("shell")
     if isinstance(shell, list) and shell:
         for item in shell:
             if not isinstance(item, dict):
-                print("  không xác định: bản ghi không hợp lệ")
+                print("  unknown: invalid record")
                 continue
             code = item.get("exit")
             state = item.get("status")
             if code is None:
-                print("  {}: exit: null; trạng thái: {}".format(item.get("cmd"), state or "không xác định"))
+                print("  {}: exit: null; status: {}".format(item.get("cmd"), state or "unknown"))
             else:
-                print("  {}: exit: {}; trạng thái: {}".format(item.get("cmd"), code, state))
+                print("  {}: exit: {}; status: {}".format(item.get("cmd"), code, state))
     else:
-        print("  không có bản ghi lệnh shell")
-    print("Câu trả lời cuối:")
-    print(value.get("answer") if value.get("answer") is not None else "không có câu trả lời cuối")
+        print("  no shell command records")
+    print("Final answer:")
+    print(value.get("answer") if value.get("answer") is not None else "no final answer")
     if value.get("error"):
-        print("Lỗi được ghi: " + str(value["error"]))
+        print("Recorded error: " + str(value["error"]))
     return 0
 
 
@@ -304,18 +304,18 @@ def cancel_run(args):
     try:
         response = invoke(binary, "run", "stop", args.run, "--json")
     except OSError as exc:
-        return error("không chạy được wchat: " + str(exc))
+        return error("cannot run wchat: " + str(exc))
     if response.returncode:
         if b"stop unconfirmed" in response.stderr.lower():
             output(response.stderr, sys.stderr)
-            print("Stop chưa xác nhận; không suy diễn trạng thái run {}".format(args.run))
+            print("Stop unconfirmed; not inferring run {} state".format(args.run))
         else:
             output(response.stderr, sys.stderr)
         return response.returncode
     value, problem = parse_json(response.stdout)
     if problem:
         return error(problem)
-    print("Run: {}\nTrạng thái sau stop: {}".format(value.get("run"), value.get("status")))
+    print("Run: {}\nStatus after stop: {}".format(value.get("run"), value.get("status")))
     return 0
 
 
@@ -327,19 +327,19 @@ def setup_run(_args):
     try:
         version = invoke(binary, "--version")
     except OSError as exc:
-        return error("chưa cài wchat: " + str(exc))
+        return error("wchat not installed: " + str(exc))
     if version.returncode:
         output(version.stderr, sys.stderr)
         return version.returncode
     found = VERSION.search(version.stdout.decode("utf-8", "replace"))
     if not found:
-        return error("không đọc được phiên bản wchat; cần wchat ≥ 0.7.0 có wchat run")
+        return error("cannot read wchat version; requires wchat ≥ 0.7.0 with wchat run")
     if tuple(map(int, found.groups())) < (0, 7, 0):
-        return error("cần wchat ≥ 0.7.0 có wchat run; hiện tại: " + found.group(0))
+        return error("requires wchat ≥ 0.7.0 with wchat run; current: " + found.group(0))
     try:
         doctor = invoke(binary, "doctor")
     except OSError as exc:
-        return error("không chạy được wchat doctor: " + str(exc))
+        return error("cannot run wchat doctor: " + str(exc))
     output(doctor.stdout)
     output(doctor.stderr, sys.stderr)
     if doctor.returncode:
@@ -359,7 +359,7 @@ def main(argv=None):
         # (a passthrough --resume bypassed the provider match, review D1).
         for flag in agent_flags:
             if flag.split("=", 1)[0] in RESERVED_FLAGS:
-                return error("cờ {} thuộc plugin, không được đặt sau --".format(flag.split("=", 1)[0]))
+                return error("flag {} belongs to the plugin, must not be set after --".format(flag.split("=", 1)[0]))
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     execute = commands.add_parser("exec", help="start or resume a detached wchat run")

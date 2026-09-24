@@ -139,7 +139,7 @@ class ExecutorContract(unittest.TestCase):
         self.scenario(start={"out": {"schema": 2, "run": "r123"}})
         p = self.exec_task()
         self.assertEqual(1, p.returncode)
-        self.assertIn("cần cập nhật", p.stdout)
+        self.assertIn("update wchat-executor", p.stdout)
         self.assertTrue(p.stdout.rstrip().endswith("WCHAT_START=unknown"))
 
     def test_unknown_schema_is_rejected_before_presenting_status(self):
@@ -147,8 +147,8 @@ class ExecutorContract(unittest.TestCase):
         p = self.call("status", "r123")
         self.assertEqual(2, p.returncode)
         self.assertIn("schema 2", p.stderr)
-        self.assertIn("cần cập nhật", p.stderr)
-        self.assertNotIn("Trạng thái", p.stdout)
+        self.assertIn("update wchat-executor", p.stderr)
+        self.assertNotIn("Status", p.stdout)
 
     def test_status_filters_by_exact_realpath_without_resorting(self):
         self.scenario(list={"out": {"schema": 1, "runs": [
@@ -172,7 +172,7 @@ class ExecutorContract(unittest.TestCase):
     def test_status_single_run_uses_status_endpoint(self):
         p = self.call("status", "r123")
         self.assertEqual(0, p.returncode)
-        self.assertIn("Trạng thái: running", p.stdout)
+        self.assertIn("Status: running", p.stdout)
         self.assertEqual(["run", "status", "r123", "--json"], self.captures()[0]["argv"])
 
     def test_cancel_preserves_each_authoritative_status(self):
@@ -181,13 +181,13 @@ class ExecutorContract(unittest.TestCase):
                 self.scenario(stop={"out": {"schema": 1, "run": "r123", "status": state}})
                 p = self.call("cancel", "r123")
                 self.assertEqual(0, p.returncode, p.stderr)
-                self.assertIn("Trạng thái sau stop: " + state, p.stdout)
+                self.assertIn("Status after stop: " + state, p.stdout)
 
     def test_cancel_unconfirmed_only_for_specific_diagnostic(self):
         self.scenario(stop={"code": 1, "err": "wchat: stop unconfirmed for run r123\n"})
         p = self.call("cancel", "r123")
         self.assertEqual(1, p.returncode)
-        self.assertIn("Stop chưa xác nhận", p.stdout)
+        self.assertIn("Stop unconfirmed", p.stdout)
         self.assertIn("stop unconfirmed", p.stderr)
 
     def test_cancel_pid_mismatch_preserves_error_not_unconfirmed(self):
@@ -195,7 +195,7 @@ class ExecutorContract(unittest.TestCase):
         p = self.call("cancel", "r123")
         self.assertEqual(1, p.returncode)
         self.assertEqual("wchat: held by pid 222 but record names pid 111\n", p.stderr)
-        self.assertNotIn("chưa xác nhận", p.stdout.lower())
+        self.assertNotIn("unconfirmed", p.stdout.lower())
 
     def test_setup_missing_wchat(self):
         self.env["WCHAT_BIN"] = str(self.root / "nonexistent")
@@ -209,7 +209,7 @@ class ExecutorContract(unittest.TestCase):
         self.env["PATH"] = str(self.root)
         p = self.call("setup")
         self.assertEqual(2, p.returncode)
-        self.assertIn("chưa cài wchat", p.stderr)
+        self.assertIn("wchat not installed", p.stderr)
         self.assertEqual([], self.captures())
 
     def test_setup_old_version(self):
@@ -239,27 +239,27 @@ class ExecutorContract(unittest.TestCase):
                 self.scenario(wait={"code": code, "out": {"schema": 1, "run": "r123", "status": state}})
                 p = self.call("wait", "r123")
                 self.assertEqual(code, p.returncode)
-                self.assertIn("Trạng thái: " + state, p.stdout)
-                self.assertIn("Mã thoát: " + str(code), p.stdout)
+                self.assertIn("Status: " + state, p.stdout)
+                self.assertIn("Exit code: " + str(code), p.stdout)
 
     def test_wait_next_step_matches_what_wchat_allows(self):
         self.scenario(wait={"code": 6, "out": {"schema": 1, "run": "r123", "status": "rate_limited",
                                                 "provider": "deepseek"}})
         p = self.call("wait", "r123")
         self.assertNotIn("--resume", p.stdout)
-        self.assertIn("run mới", p.stdout)
+        self.assertIn("new run", p.stdout)
         self.scenario(wait={"code": 4, "out": {"schema": 1, "run": "r123", "status": "needs_human",
                                                 "provider": "deepseek"}})
         p = self.call("wait", "r123")
-        self.assertIn("kiểm tra hội thoại", p.stdout)
+        self.assertIn("check the conversation", p.stdout)
         self.assertIn("exec --provider deepseek --resume r123", p.stdout)
 
     def test_wait_timeout_seven_is_still_running(self):
         self.scenario(wait={"code": 7, "out": {"schema": 1, "run": "r123", "status": "running"}})
         p = self.call("wait", "r123")
         self.assertEqual(7, p.returncode)
-        self.assertIn("Mã thoát: 7", p.stdout)
-        self.assertIn("Vẫn đang chạy", p.stdout)
+        self.assertIn("Exit code: 7", p.stdout)
+        self.assertIn("Still running", p.stdout)
         self.assertNotIn("result r123", p.stdout)
 
     def test_wait_forwards_timeout_and_returns_underlying_code(self):
@@ -274,8 +274,8 @@ class ExecutorContract(unittest.TestCase):
             "shell": [{"cmd": "echo yay", "exit": 0, "status": "exited"}], "answer": "Job finished"}})
         p = self.call("result", "r123")
         self.assertEqual(0, p.returncode, p.stderr)
-        for required in ("Trạng thái: done", "Commit:", "a" * 40, "Do work",
-                         "Lệnh shell:", "echo yay", "exit: 0", "Câu trả lời cuối:", "Job finished"):
+        for required in ("Status: done", "Commit:", "a" * 40, "Do work",
+                         "Shell commands:", "echo yay", "exit: 0", "Final answer:", "Job finished"):
             self.assertIn(required, p.stdout)
 
     def test_result_distinguishes_no_commit_from_unavailable_evidence(self):
@@ -283,8 +283,8 @@ class ExecutorContract(unittest.TestCase):
             "git": {"available": True, "commits": [], "bounded": True}, "shell": [], "answer": None}})
         p = self.call("result", "r123")
         self.assertEqual(0, p.returncode)
-        self.assertIn("không có commit", p.stdout)
-        self.assertNotIn("không xác định", p.stdout)
+        self.assertIn("no commit", p.stdout)
+        self.assertNotIn("unknown", p.stdout)
 
     def test_result_unavailable_git_and_uncertain_shell_are_not_success(self):
         self.scenario(result={"out": {"schema": 1, "run": "r123", "status": "died",
@@ -293,10 +293,10 @@ class ExecutorContract(unittest.TestCase):
                       {"cmd": "lost", "exit": None, "status": "unavailable"}], "answer": None}})
         p = self.call("result", "r123")
         self.assertEqual(0, p.returncode)
-        for required in ("không xác định", "git start missing", "bounded: false", "exit: null",
-                         "uncertain", "unavailable", "không có câu trả lời cuối"):
+        for required in ("unknown", "git start missing", "bounded: false", "exit: null",
+                         "uncertain", "unavailable", "no final answer"):
             self.assertIn(required, p.stdout)
-        self.assertNotIn("không có commit", p.stdout)
+        self.assertNotIn("no commit", p.stdout)
 
     def test_resume_requires_provider(self):
         p = self.call("exec", "--resume", "r123")
@@ -307,7 +307,7 @@ class ExecutorContract(unittest.TestCase):
         self.scenario(status={"out": {"schema": 1, "run": "r123", "provider": "deepseek"}})
         p = self.call("exec", "--provider", "chatgpt", "--resume", "r123")
         self.assertEqual(2, p.returncode)
-        self.assertIn("không khớp", p.stderr)
+        self.assertIn("does not match", p.stderr)
         self.assertEqual([], self.captures("start"))
         self.assertEqual(1, len(self.captures("status")))
 
@@ -335,7 +335,7 @@ class ExecutorContract(unittest.TestCase):
     def test_multiline_task_is_byte_exact_stdin_and_not_executed(self):
         marker = self.root / "PWNED"
         payload = ("Line 1 with ' and \" and ;\n" + "$(touch " + str(marker) + ")\n" +
-                   "Unicode: tiếng Việt 🧪\n").encode("utf-8")
+                   "Unicode: 日本語 🧪\n").encode("utf-8")
         self.task.write_bytes(payload)
         p = self.exec_task()
         self.assertEqual(0, p.returncode, p.stderr)
@@ -355,7 +355,7 @@ class ExecutorContract(unittest.TestCase):
         self.assertEqual("--json", argv[-1])
 
     def test_workspace_defaults_to_caller_cwd_even_when_script_elsewhere(self):
-        unicode_repo = self.root / "project has spaces tiếng Việt"
+        unicode_repo = self.root / "project has spaces 日本語"
         unicode_repo.mkdir()
         p = self.exec_task(cwd=unicode_repo)
         self.assertEqual(0, p.returncode, p.stderr)
