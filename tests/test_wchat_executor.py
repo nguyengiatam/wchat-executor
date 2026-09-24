@@ -95,7 +95,9 @@ class ExecutorContract(unittest.TestCase):
 
     def test_plugin_flags_after_separator_are_refused_before_wchat(self):
         # Review D1: a passthrough --resume skipped the provider match.
-        for flag in ("--resume", "--resume=old-run", "--provider", "--workspace", "--run-id", "--json"):
+        for flag in ("--resume", "--resume=old-run", "--provider", "--provider=x", "--workspace",
+                     "--workspace=/tmp", "--run-id", "--run-id=r", "--json", "--json=1",
+                     "--task-file", "--task-file=/tmp/t", "--config", "--config=/tmp/c"):
             with self.subTest(flag=flag):
                 p = self.call("exec", "--provider", "chatgpt", "--task-file", str(self.task),
                               "--", "--max-rounds", "5", flag, "old-run")

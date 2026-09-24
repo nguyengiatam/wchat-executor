@@ -23,6 +23,9 @@ run. Present them as-is. Exit code 7 means the wait timed out while the run was
 still going — that is **not** a finished run; say the run is still running and
 that `wait` or `status` can be called again. Exit code 4 means the run needs a
 human, 6 means the provider rate-limited it, 5 means it was stopped or is
-incomplete, and 1 means it died. Follow the plan's rule: never re-dispatch on
-your own — show the resume command (`exec --provider <same provider> --resume
-<run>`) and let the user decide.
+incomplete, and 1 means it died. Never re-dispatch on your own; show the next
+step the script printed and let the user decide:
+- `stopped`, `retryable` — `exec --provider <same provider> --resume <run>`;
+- `needs_human` — inspect the conversation first; resume only if the turn or
+  operation had no effect;
+- `rate_limited` — wchat will not resume it; a new `exec` is the only way on.

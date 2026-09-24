@@ -1,6 +1,6 @@
 ---
 description: Dispatch a coding task to a wchat provider as a background executor, then get woken when it finishes
-argument-hint: '--provider <name> [--resume <run>] <task> [-- <agent flags>]'
+argument-hint: '--provider <name> [--workspace <dir>] [--resume <run>] [--max-rounds N] [--session S] [--new] [--on-sleep P] <task>'
 allowed-tools: Bash, Write, Read
 ---
 
@@ -8,20 +8,23 @@ Dispatch a task to wchat. The provider is mandatory and there is no default.
 
 ## Steps
 
-1. Parse `$ARGUMENTS` yourself. Do not let the shell interpolate it.
-   - A provider is required: `--provider <name>` where `<name>` matches
-     `^[a-z0-9_-]{1,32}$`. If it is missing or malformed, stop and ask the
-     user which provider to use. Never guess and never fall back to another
-     provider.
-   - If `--resume <run>` is present, the run id must match
-     `^[0-9A-Za-z_-]{1,64}$`, and there must be **no** new task: a resume
-     cannot carry a task file. If both are present, refuse.
-   - The task comes **before** a bare `--`; everything after `--` is agent
-     flags only (`--max-rounds 5`, `--session s`, `--new`, `--on-sleep keep`),
-     kept verbatim, in order. Never move task words after `--`. The plugin's own
-     flags (`--provider`, `--resume`, `--workspace`) never go after `--`.
-   - Everything before `--`, minus `--provider <name>` and `--resume <run>`, is
-     the task text.
+1. Parse `$ARGUMENTS` yourself, left to right. Do not let the shell interpolate it.
+   **Options come first, the task is everything after them.** Read tokens from
+   the start only while each is one of these options:
+   - plugin options: `--provider <name>`, `--workspace <dir>`, `--resume <run>`;
+   - agent options: `--max-rounds <N>`, `--session <S>`, `--new`, `--on-sleep <P>`.
+
+   The first token that is not one of those options starts the task. From there
+   on **everything is task text, verbatim** — including words that look like
+   options (`--provider deepseek`, `--session`, a bare `--`): a task about a CLI
+   often names its flags, and none of them may be removed or moved.
+   - A provider is required and `<name>` must match `^[a-z0-9_-]{1,32}$`. If it
+     is missing or malformed, stop and ask which provider to use. Never guess,
+     never fall back.
+   - `--resume <run>` needs a run id matching `^[0-9A-Za-z_-]{1,64}$` and **no**
+     task text (a resume carries no new task). Task text with `--resume` ⇒ refuse.
+   - `--workspace <dir>` is the repository the run works in; without it, the
+     current directory. Never drop it.
 
 2. Write the task text to a fresh file **outside the workspace**, with the
    `Write` tool — never with a shell heredoc, and never through `!`. Use
@@ -37,7 +40,8 @@ Dispatch a task to wchat. The provider is mandatory and there is no default.
 
    ```bash
    python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wchat_executor.py" exec \
-     --provider '<provider>' --task-file '<path>' [-- <agent flags>]
+     --provider '<provider>' [--workspace '<dir>'] --task-file '<path>' \
+     [-- <agent options, each value quoted>]
    ```
 
    (For a resume, use `--resume '<run>'` and **no** `--task-file`.)
