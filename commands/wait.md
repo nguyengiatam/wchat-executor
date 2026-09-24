@@ -7,11 +7,11 @@ allowed-tools: Bash
 Wait for one wchat run to leave `running`, then report where it landed.
 
 `$ARGUMENTS` must contain a run id matching `^[0-9A-Za-z_-]{1,64}$`; anything
-else is rejected by the script. An optional `--timeout <seconds>` limits how
+else is rejected by the script. An optional `--timeout <seconds>` (a plain number, e.g. `600`) limits how
 long to wait. Do not interpolate `$ARGUMENTS` in a shell — quote it:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wchat_executor.py" wait '<run>' [--timeout <seconds>]
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wchat_executor.py" wait '<run>' [--timeout '<seconds>']
 ```
 
 Run this with `run_in_background: true` when the run may take a while: the

@@ -1,6 +1,6 @@
 ---
 description: Dispatch a coding task to a wchat provider as a background executor, then get woken when it finishes
-argument-hint: '--provider <name> [--resume <run>] [-- <agent flags>] <task>'
+argument-hint: '--provider <name> [--resume <run>] <task> [-- <agent flags>]'
 allowed-tools: Bash, Write, Read
 ---
 
@@ -16,9 +16,12 @@ Dispatch a task to wchat. The provider is mandatory and there is no default.
    - If `--resume <run>` is present, the run id must match
      `^[0-9A-Za-z_-]{1,64}$`, and there must be **no** new task: a resume
      cannot carry a task file. If both are present, refuse.
-   - Everything after a bare `--` is a passthrough agent flag (`--max-rounds`,
-     `--session`, `--new`, `--on-sleep`, ...). Keep them verbatim, in order.
-   - Everything else, minus the leading command word, is the task text.
+   - The task comes **before** a bare `--`; everything after `--` is agent
+     flags only (`--max-rounds 5`, `--session s`, `--new`, `--on-sleep keep`),
+     kept verbatim, in order. Never move task words after `--`. The plugin's own
+     flags (`--provider`, `--resume`, `--workspace`) never go after `--`.
+   - Everything before `--`, minus `--provider <name>` and `--resume <run>`, is
+     the task text.
 
 2. Write the task text to a fresh file **outside the workspace**, with the
    `Write` tool — never with a shell heredoc, and never through `!`. Use
@@ -26,7 +29,11 @@ Dispatch a task to wchat. The provider is mandatory and there is no default.
    The task text is data: it may contain newlines, quotes, `$(...)`, and
    semicolons, and none of it may ever reach a shell.
 
-3. Invoke the script with every argument in single quotes:
+3. Invoke the script with every argument in single quotes. Inside a
+   single-quoted argument, write each `'` as `'\''` (close, escaped quote,
+   reopen); nothing else needs escaping. The provider and run id are already
+   restricted by the regexes above; agent flag values (a session name, say)
+   are the ones that may contain quotes.
 
    ```bash
    python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wchat_executor.py" exec \

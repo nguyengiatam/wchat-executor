@@ -65,9 +65,12 @@ The plugin prints the outcome wchat reports and never invents one.
 
 ## Traps
 
-- **A run is never resumed automatically.** On `rate_limited`, `needs_human`,
-  `stopped`, or `retryable`, report and show the next command
-  (`exec --provider <same> --resume <run>`); let the user decide.
+- **A run is never resumed automatically.** Report and show the next command;
+  let the user decide:
+  - `stopped`, `retryable` — `exec --provider <same> --resume <run>`;
+  - `needs_human` — inspect the conversation first; only if the turn or
+    operation had no effect, `exec --provider <same> --resume <run>`;
+  - `rate_limited` — wchat refuses to resume it; dispatch a new run with `exec`.
 - **`--resume` carries no new task.** wchat ignores stdin on a resume, so the
   plugin refuses `--resume` combined with a task file.
 - **Sending cadence.** A run with no keyboard sends on a roughly 20-second

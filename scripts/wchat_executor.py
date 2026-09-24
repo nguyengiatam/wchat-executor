@@ -35,6 +35,11 @@ def provider_name(value):
     return value
 
 
+# Flags the plugin itself sets or checks; never accepted after "--".
+RESERVED_FLAGS = frozenset(("--resume", "--provider", "--workspace", "--run-id", "--json",
+                            "--task-file", "--config"))
+
+
 def wchat_binary():
     """An explicit WCHAT_BIN is authoritative, including when it is broken."""
     explicit = "WCHAT_BIN" in os.environ
@@ -242,9 +247,11 @@ def wait_run(args):
         else:
             print("Kiểm tra provider trước khi tiếp tục run {}".format(args.run))
     elif value.get("status") == "needs_human":
-        print("Cần người kiểm tra trước khi quyết định tiếp tục; không tự giao lại.")
+        print("Cần người kiểm tra hội thoại trước; nếu chắc lượt/thao tác chưa có tác dụng thì tiếp tục thủ công: "
+              "exec --provider {} --resume {}. Không tự giao lại.".format(value.get("provider"), args.run))
     elif value.get("status") == "rate_limited":
-        print("Provider giới hạn lượt; không tự giao lại.")
+        print("Provider giới hạn lượt; run này không resume được — giao một run mới bằng exec khi muốn. "
+              "Không tự giao lại.")
     else:
         print("Kiểm tra kết quả: result {}".format(args.run))
     return response.returncode
@@ -348,6 +355,11 @@ def main(argv=None):
         separator = argv.index("--")
         agent_flags = argv[separator + 1:]
         argv = argv[:separator]
+        # The plugin owns these; passing them through would skip its checks
+        # (a passthrough --resume bypassed the provider match, review D1).
+        for flag in agent_flags:
+            if flag.split("=", 1)[0] in RESERVED_FLAGS:
+                return error("cờ {} thuộc plugin, không được đặt sau --".format(flag.split("=", 1)[0]))
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     execute = commands.add_parser("exec", help="start or resume a detached wchat run")

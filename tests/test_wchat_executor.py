@@ -93,6 +93,16 @@ class ExecutorContract(unittest.TestCase):
         self.assertIn("--provider", p.stderr)
         self.assertEqual([], self.captures())
 
+    def test_plugin_flags_after_separator_are_refused_before_wchat(self):
+        # Review D1: a passthrough --resume skipped the provider match.
+        for flag in ("--resume", "--resume=old-run", "--provider", "--workspace", "--run-id", "--json"):
+            with self.subTest(flag=flag):
+                p = self.call("exec", "--provider", "chatgpt", "--task-file", str(self.task),
+                              "--", "--max-rounds", "5", flag, "old-run")
+                self.assertEqual(2, p.returncode, p.stderr)
+                self.assertIn(flag.split("=", 1)[0], p.stderr)
+                self.assertEqual([], self.captures())
+
     def test_provider_validation_happens_before_wchat(self):
         p = self.call("exec", "--provider", "ChatGPT;touch", "--task-file", str(self.task))
         self.assertEqual(2, p.returncode)
@@ -229,6 +239,18 @@ class ExecutorContract(unittest.TestCase):
                 self.assertEqual(code, p.returncode)
                 self.assertIn("Trạng thái: " + state, p.stdout)
                 self.assertIn("Mã thoát: " + str(code), p.stdout)
+
+    def test_wait_next_step_matches_what_wchat_allows(self):
+        self.scenario(wait={"code": 6, "out": {"schema": 1, "run": "r123", "status": "rate_limited",
+                                                "provider": "deepseek"}})
+        p = self.call("wait", "r123")
+        self.assertNotIn("--resume", p.stdout)
+        self.assertIn("run mới", p.stdout)
+        self.scenario(wait={"code": 4, "out": {"schema": 1, "run": "r123", "status": "needs_human",
+                                                "provider": "deepseek"}})
+        p = self.call("wait", "r123")
+        self.assertIn("kiểm tra hội thoại", p.stdout)
+        self.assertIn("exec --provider deepseek --resume r123", p.stdout)
 
     def test_wait_timeout_seven_is_still_running(self):
         self.scenario(wait={"code": 7, "out": {"schema": 1, "run": "r123", "status": "running"}})
