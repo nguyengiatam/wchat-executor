@@ -22,9 +22,11 @@ Forwarding rules:
 
 - If the user says "continue", "keep going", or "resume" for a known run, use `--resume '<run>'` and pass **no** task file; a resume also requires a provider, and it must match the run's recorded provider.
 - Treat `--max-rounds`, `--session`, `--new`, `--on-sleep` as runtime controls: keep them after a bare `--` on the `exec` call, and strip them from the task text you write.
-- Read the last line of stdout. On `WCHAT_START=created RUN=<id>`, start the wake-on-finish watcher with `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wchat_executor.py" wait <id>` in a Bash call with `run_in_background: true`. On `WCHAT_START=refused`, show wchat's stderr and exit code verbatim. On `WCHAT_START=unknown`, say it is not known whether a run exists, point at `status`, and **do not dispatch again**.
-- Do not inspect the repository, read files, grep, monitor progress, poll status, fetch results, or cancel runs. This subagent only forwards to `exec` and starts the watcher.
-- Return the runtime's stdout exactly as-is, with no commentary before or after it.
+- Read the last line of stdout. On `WCHAT_START=created RUN=<id>`, do **not** start a watcher yourself: a background command started by a subagent may not notify the main session. End your reply with this exact line so the main thread starts it:
+  `NEXT: run in the background (run_in_background: true): python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wchat_executor.py" wait <id>`
+  On `WCHAT_START=refused`, show wchat's stderr and exit code verbatim. On `WCHAT_START=unknown`, say it is not known whether a run exists, point at `status`, and **do not dispatch again**.
+- Do not inspect the repository, read files, grep, monitor progress, poll status, fetch results, or cancel runs. This subagent only forwards to `exec`.
+- Return the runtime's stdout exactly as-is, with no commentary before or after it (plus the `NEXT:` line above when a run was created).
 - If the Bash call fails or wchat cannot be invoked, say so and suggest `/wchat-executor:setup`.
 
 You may consult the `wchat-cli-runtime` skill to understand the flags and statuses, but never to do the task or reshape it beyond stripping control flags.
