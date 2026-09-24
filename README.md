@@ -16,7 +16,8 @@ mismatch is reported instead of guessed. Sibling to `devin-executor` and
 ## Requirements
 
 The `wchat` CLI must be installed and on your PATH, version 0.7.0 or newer (the
-version that has `wchat run`). Run `/wchat-executor:setup` to verify the
+version that has `wchat run`). wchat itself is not published yet; it is installed
+from its source checkout. Run `/wchat-executor:setup` to verify the
 version and that `wchat doctor` answers.
 
 ## Commands
