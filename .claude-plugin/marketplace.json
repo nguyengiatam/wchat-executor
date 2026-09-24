@@ -1,0 +1,18 @@
+{
+  "name": "wchat-executor-marketplace",
+  "description": "Marketplace for the wchat-executor plugin",
+  "owner": {
+    "name": "Nguy\u1ec5n Gia T\u00e2m"
+  },
+  "plugins": [
+    {
+      "name": "wchat-executor",
+      "description": "Dispatch the wchat CLI from Claude Code as a background coding executor - provider required per dispatch, detached runs with durable status, wake-on-finish, and schema-versioned JSON.",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "Nguy\u1ec5n Gia T\u00e2m"
+      }
+    }
+  ]
+}
