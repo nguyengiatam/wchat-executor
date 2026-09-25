@@ -1,6 +1,6 @@
 ---
 description: Dispatch a coding task to a wchat provider as a background executor, then get woken when it finishes
-argument-hint: '--provider <name> [--workspace <dir>] [--resume <run>] [--max-rounds N] [--session S] [--new] [--on-sleep P] [--model M] [--thinking T] <task>'
+argument-hint: '--provider <name> [--workspace <dir>] [--resume <run>] [--max-rounds N] [--session S] [--new] [--on-sleep P] [--model M] [--thinking T] [--unverified-provider] <task>'
 allowed-tools: Bash, Write, Read
 ---
 
@@ -13,7 +13,7 @@ Dispatch a task to wchat. The provider is mandatory and there is no default.
    the start only while each is one of these options:
    - plugin options: `--provider <name>`, `--workspace <dir>`, `--resume <run>`;
    - agent options: `--max-rounds <N>`, `--session <S>`, `--new`, `--on-sleep <P>`,
-     `--model <M>`, `--thinking <T>`.
+     `--model <M>`, `--thinking <T>`, `--unverified-provider`.
 
    The first token that is not one of those options starts the task. From there
    on **everything is task text, verbatim** — including words that look like

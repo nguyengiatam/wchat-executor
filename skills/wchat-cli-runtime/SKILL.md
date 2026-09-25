@@ -31,7 +31,19 @@ lets the script feed that file to `start`'s stdin.
 Every dispatch names its provider; there is no default and no fallback. On a
 resume, the provider must match the run's recorded provider, or the dispatch is
 refused before anything is created. `wchat` itself accepts
-`--provider {chatgpt,gemini,grok,deepseek,qwen,zai}`.
+`--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi}`.
+
+## Kimi is an unverified provider (wchat 0.9.0+)
+
+`kimi` has run for real (a one-shot ask, a named session, an agent reading files
+through c2c) but its delivery is not yet measured, so wchat refuses it unless the
+agent options carry `--unverified-provider`, and it prints a warning to stderr on
+every run. The flag is not remembered by the run: pass it again on a resume
+(`exec --provider kimi --resume <run> -- --unverified-provider`). Kimi does not
+accept `--model` or `--thinking` yet; the model picker is on wchat's
+`kimi-phase2` branch, not released. Kimi keeps the composer draft, attached file
+cards included, across tabs: a failed turn can leave cards that get sent with the
+next turn.
 
 ## Model and thinking mode (wchat 0.9.0+)
 

@@ -360,6 +360,12 @@ class ExecutorContract(unittest.TestCase):
         argv = self.captures("start")[0]["argv"]
         self.assertEqual(["run", "start", "--model", "qwen3.8-max", "--thinking", "fast"], argv[:6])
 
+    def test_unverified_provider_flag_reaches_run_start_verbatim(self):
+        p = self.exec_task("--", "--unverified-provider")
+        self.assertEqual(0, p.returncode, p.stderr)
+        argv = self.captures("start")[0]["argv"]
+        self.assertEqual(["run", "start", "--unverified-provider"], argv[:3])
+
     def test_workspace_defaults_to_caller_cwd_even_when_script_elsewhere(self):
         unicode_repo = self.root / "project has spaces 日本語"
         unicode_repo.mkdir()
