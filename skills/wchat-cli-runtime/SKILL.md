@@ -13,7 +13,8 @@ truth for the flags, the statuses, and the traps.
 
 ```
 wchat run start  [--provider P] [--workspace DIR] [--resume RUN] [--max-rounds N]
-                 [--session S] [--new] [--on-sleep {pause,keep,fail}] [--json]
+                 [--session S] [--new] [--on-sleep {pause,keep,fail}]
+                 [--model M] [--thinking T] [--json]
 wchat run status RUN [--json]
 wchat run wait   RUN [--json] [--timeout S]
 wchat run result RUN [--json]
@@ -31,6 +32,17 @@ Every dispatch names its provider; there is no default and no fallback. On a
 resume, the provider must match the run's recorded provider, or the dispatch is
 refused before anything is created. `wchat` itself accepts
 `--provider {chatgpt,gemini,grok,deepseek,qwen,zai}`.
+
+## Model and thinking mode (wchat 0.9.0+)
+
+`--model` and `--thinking` go to `start` as agent options. Only gemini, qwen and
+zai accept them (`--thinking`: gemini, qwen); any other provider is refused before
+anything is sent. A model the page does not offer is **not** an error: the run
+uses the page's own model and stderr says `model '<asked>' not available`. Names
+match an id, the menu label, the site id, an alias (`pro`, `flash`, `max`) or the
+last word of a label - `wchat models list` shows them. On Gemini the choice is the
+account's default for every tab, so parallel Gemini runs with different models
+overwrite each other's default (wchat re-selects before every send).
 
 ## Parallel runs are normal
 

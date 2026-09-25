@@ -354,6 +354,12 @@ class ExecutorContract(unittest.TestCase):
         self.assertEqual(b"Do one thing.\n", base64.b64decode(record["stdin"]))
         self.assertEqual("--json", argv[-1])
 
+    def test_model_and_thinking_reach_run_start_verbatim(self):
+        p = self.exec_task("--", "--model", "qwen3.8-max", "--thinking", "fast")
+        self.assertEqual(0, p.returncode, p.stderr)
+        argv = self.captures("start")[0]["argv"]
+        self.assertEqual(["run", "start", "--model", "qwen3.8-max", "--thinking", "fast"], argv[:6])
+
     def test_workspace_defaults_to_caller_cwd_even_when_script_elsewhere(self):
         unicode_repo = self.root / "project has spaces 日本語"
         unicode_repo.mkdir()
