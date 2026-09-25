@@ -32,6 +32,16 @@ resume, the provider must match the run's recorded provider, or the dispatch is
 refused before anything is created. `wchat` itself accepts
 `--provider {chatgpt,gemini,grok,deepseek,qwen,zai}`.
 
+## Parallel runs are normal
+
+Several runs may be in flight at once, on different providers **and** on the same
+provider: each run has its own session, tab and conversation, and wchat's locks
+keep them apart. Do not wait for one run to finish before dispatching the next,
+and do not switch provider just because that provider already has a run going.
+wchat spaces the sends of same-provider runs by itself (`throttle.<provider>`).
+Do not reuse one `--session` for two runs at once - a session runs one turn at a
+time.
+
 ## JSON is versioned
 
 Every `wchat run ... --json` object carries `schema: 1`. The plugin only reads
@@ -62,6 +72,15 @@ running finishes first. `stop` reports the real outcome: `stopped`, a
 `needs_human` turn that may have been sent, a final outcome already recorded
 before the stop landed, or "stop unconfirmed" when wchat's own message says so.
 The plugin prints the outcome wchat reports and never invents one.
+
+## wchat's browser
+
+wchat drives its **own** browser profile under `~/.wchat`, never the user's
+browser. From wchat 0.8.0 every run and `doctor` open or restart that browser
+when it is not answering (one `wchat: browser lifecycle: ...` line on stderr).
+Do not ask the user to start it, and never give them a raw browser command to run
+through `!`: it would run in the foreground and hang the session. A profile
+directory name does not say which providers are logged in.
 
 ## Traps
 

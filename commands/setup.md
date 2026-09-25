@@ -20,5 +20,17 @@ The script checks three things and prints one message per failure:
   cause yourself: a broken config and a browser that will not answer look the
   same from here, and only wchat can tell them apart.
 
+wchat has its **own** browser: a dedicated profile under `~/.wchat`, separate from
+the browser the user works in. From wchat 0.8.0, `wchat doctor` (and every run)
+opens or restarts that browser by itself when it is not answering, and prints a
+`Browser lifecycle:` line saying what it did. So:
+
+- never hand the user a raw browser command to run, least of all through `!` - a
+  browser started that way runs in the foreground and hangs the session;
+- if doctor still fails because nothing answers on the port and the version is
+  below 0.8.0, the fix is upgrading wchat, not starting the browser by hand;
+- a profile directory's name (for example `chrome-profile-grok`) says nothing
+  about which providers are logged in; the provider is always named per dispatch.
+
 Present the result as-is. This command never starts a run and never touches the
-user's browser.
+user's own browser.

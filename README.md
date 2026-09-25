@@ -1,7 +1,7 @@
 # wchat-executor
 
 A Claude Code plugin that dispatches the **wchat CLI** (`wchat run`) as a
-background coding executor - one provider named per dispatch, detached runs
+background coding executor - the provider is named on every dispatch, detached runs
 with durable status, wake-on-finish, and JSON that is versioned so a schema
 mismatch is reported instead of guessed. Sibling to `devin-executor` and
 `agy-executor`, same shape, different CLI.
@@ -19,6 +19,14 @@ The `wchat` CLI must be installed and on your PATH, version 0.7.0 or newer (the
 version that has `wchat run`). wchat itself is not published yet; it is installed
 from its source checkout. Run `/wchat-executor:setup` to verify the
 version and that `wchat doctor` answers.
+
+## Parallel runs
+
+Dispatch as many runs as you like, at the same time: **different providers in
+parallel, and several runs on the same provider in parallel** (each run gets its
+own session, tab and conversation in wchat's browser). Naming the provider on
+each dispatch does not mean one provider at a time. wchat spaces the sends of
+runs on the same provider; nothing else waits.
 
 ## Commands
 
@@ -55,7 +63,9 @@ forwards a task to the runtime.
 
 The plugin keeps no job state of its own - every fact comes from `wchat run`.
 It never resumes or re-dispatches on its own, never switches provider, and
-never opens or closes your browser.
+never opens or closes your own browser. wchat itself (0.8.0 and newer) opens or
+restarts **its own** browser - the dedicated profile under `~/.wchat` - when a run
+or `doctor` needs it, so you never start it by hand.
 
 ## License
 
