@@ -39,16 +39,18 @@ refused before anything is created. `wchat` itself accepts
 through c2c) but its delivery is not yet measured, so wchat refuses it unless the
 agent options carry `--unverified-provider`, and it prints a warning to stderr on
 every run. The flag is not remembered by the run: pass it again on a resume
-(`exec --provider kimi --resume <run> -- --unverified-provider`). Kimi does not
-accept `--model` or `--thinking` yet; the model picker is on wchat's
-`kimi-phase2` branch, not released. Kimi keeps the composer draft, attached file
+(`exec --provider kimi --resume <run> -- --unverified-provider`). On wchat main
+after 0.9.0, Kimi takes `--model k3|k2.8|instant` and `--thinking
+standard|advanced|max` (`max` spends extra credits). K3 and K2.8 may need a paid
+Kimi plan: the run then fails with "this Kimi model requires an upgraded Kimi plan
+(paywall)", so `instant` is the safe choice on a free account. Kimi keeps the composer draft, attached file
 cards included, across tabs: a failed turn can leave cards that get sent with the
 next turn.
 
 ## Model and thinking mode (wchat 0.9.0+)
 
-`--model` and `--thinking` go to `start` as agent options. Only gemini, qwen and
-zai accept them (`--thinking`: gemini, qwen); any other provider is refused before
+`--model` and `--thinking` go to `start` as agent options. Only gemini, qwen, zai
+and kimi accept them (`--thinking`: gemini, qwen, zai, kimi); any other provider is refused before
 anything is sent. A model the page does not offer is **not** an error: the run
 uses the page's own model and stderr says `model '<asked>' not available`. Names
 match an id, the menu label, the site id, an alias (`pro`, `flash`, `max`) or the
