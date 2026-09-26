@@ -108,8 +108,15 @@ thinking, while it reasoned about reading files outside the workspace with
 repository with `cat` and saying "this is not bypassing the rules", the first
 turn was refused. In ten isolation sends that paragraph tripped the filter only
 as a whole (permission + "not bypassing" sentence, with its context); neither
-part alone did, and an external path by itself was not shown to trigger it. Give MiMo small, self-contained tasks inside the
-workspace (rules 1, 6, 7). Models: `--model pro|flash`; no thinking control.
+part alone did, and an external path by itself was not shown to trigger it. A second trigger, isolated with six short probes the same day: the phrase
+"thinking mode" in the brief (reading code that contains "thinking" was fine).
+A third run on the wchat repository, whose brief avoided both, was refused on a
+turn carrying only ops results; what in them tripped the filter was not
+isolated. The filter can judge workspace data, which the brief cannot fully
+control. Observations are from a handful of runs: MiMo has also been running
+fine on another project's tasks. Give it small, self-contained tasks inside
+the workspace (rules 1, 6, 7); if a run is refused, read the capture, reword or
+move the task to another provider rather than resending it unchanged. Models: `--model pro|flash`; no thinking control.
 Free plan has a daily token limit (amount not measured).
 
 **Qwen** — its thinking mode sometimes calls Qwen's own tools (code
