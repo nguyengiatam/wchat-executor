@@ -6,10 +6,17 @@ description: Use when writing the task text for a wchat run (exec --task-file) o
 # Briefing a wchat executor
 
 A wchat run is a model in a chat web page, reaching the workspace only through
-the ops it asks for. It forgets, it wanders, and each provider's site adds its
-own traps. Most failed runs trace back to the brief, not the model. Everything
-below was measured on real runs; each provider note carries its date and
-evidence, and anything not measured is marked so.
+the ops it asks for. This skill collects the briefing practices and the dated
+provider-specific limits observed on real runs (webchat-agent project,
+September 2026). Observations are not guarantees: sites change, and an
+anecdote is marked as one.
+
+## Which provider
+
+The order in which to try providers is each project's decision: follow the
+project's own team/roster file, and ask the user before changing it. This
+skill does not set it. Do not dispatch to a provider the user has put on hold
+(currently Kimi, for this user).
 
 ## Rules for every provider
 
@@ -52,37 +59,56 @@ evidence, and anything not measured is marked so.
 
 ## Inline limits (wchat 0.12.1)
 
-Results over either limit go as an attached file.
+Results over either limit go as an attached file. Source: each provider's
+`capabilities` in `wchat/provider/<name>.py` (`max_inline_lines`,
+`max_inline_prompt`); check your installed version if it differs.
 
 | provider | lines | chars | agent support |
 |---|---|---|---|
 | chatgpt | 200 | 200,000 | supported |
-| gemini, grok, deepseek, qwen, zai | 400 | 200k-500k | supported |
+| gemini | 400 | 500,000 | supported |
+| grok | 400 | 200,000 | supported |
+| deepseek | 400 | 500,000 | supported |
+| qwen | 400 | 500,000 | supported |
+| zai | 400 | 200,000 | supported |
 | mimo | 1000 | 100,000 | supported (0.12.0+) |
 | kimi | 400 | 200,000 | unverified (`--unverified-provider`) |
 
 ## Per-provider notes
 
 **DeepSeek** — fast on small, well-pointed tasks (~10-15 min). Needs the
-small-edit-turn rule (5). Sends are paced 20 s apart in the user's config; two
+small-edit-turn rule (5). Put this sentence in every DeepSeek brief: "Every
+workspace request is a fenced ```c2c JSON block; never DSML/XML or your own
+tool-call syntax" — on a long task it once drifted to `<｜｜DSML｜｜ invoke>`,
+which wchat reads as a final answer (2026-09-22). Sends are paced 20 s apart in the user's config; two
 DeepSeek runs dispatched at the same time both died `rate_limit_reached`
 (exit 6, not resumable) on 2026-09-26 — cause not yet investigated. A turn
-where DeepSeek only "thinks" and returns no answer ends `needs_human` and does
-not resume: dispatch a new session.
+where DeepSeek returned only thinking and no answer ended `needs_human` and did
+not resume (2026-09-26); read the raw capture before concluding that, because
+earlier "never reported finished" failures were a wchat decoder bug (fixed
+2026-09-25, `8ffe362`). If the status really is an unresumable `needs_human`,
+dispatch a new session.
 
 **ChatGPT** (paid account in wchat's browser) — the most dependable for long
 tasks, reviews and live measurements on 2026-09-26 (about a dozen runs, no
-delivery failure after wchat 0.9.1). It follows "stop and report if X" rules
+delivery failure after wchat 0.9.1). wchat runs ChatGPT in parallel, but the
+account does not like it: on 2026-09-25 several simultaneous ChatGPT runs with
+many uploads got the account temporarily blocked ("unusual activity", >15
+min, every retry failed; wchat reports `rate_limited`). Keep to 1-2 ChatGPT
+runs at a time and do not resume into a block. It follows "stop and report if X" rules
 literally, which is what you want. For read-only review, run it on a `git
 clone` in a scratch directory: wchat has no read-only mode.
 
 **MiMo** (Xiaomi MiMo AI Studio) — has a content filter that checks the prompt
 AND the model's own output (`event:sensitive_query`, reported by wchat 0.12.1+
-as "MiMo refused the turn (content filter ...)"). Measured 2026-09-26: a brief
-granting permission to read another repository with shell `cat` plus "this is
-not bypassing the rules" was refused on the first turn; a brief pointing at
-files outside the workspace was cut mid-reply while the model reasoned about
-reading them with `cat`. Give MiMo small, self-contained tasks inside the
+as "MiMo refused the turn (content filter ...)"). Observed 2026-09-26 on two
+runs of the same task: (1) the reply was cut in the middle of the model's
+thinking, while it reasoned about reading files outside the workspace with
+`cat`; (2) after a paragraph was added granting permission to read the other
+repository with `cat` and saying "this is not bypassing the rules", the first
+turn was refused. In ten isolation sends that paragraph tripped the filter only
+as a whole (permission + "not bypassing" sentence, with its context); neither
+part alone did, and an external path by itself was not shown to trigger it. Give MiMo small, self-contained tasks inside the
 workspace (rules 1, 6, 7). Models: `--model pro|flash`; no thinking control.
 Free plan has a daily token limit (amount not measured).
 
@@ -91,7 +117,8 @@ interpreter) instead of answering with a c2c block and loops; `--thinking fast`
 had a send bug on 2026-09-26. It once took an attached file for a workspace
 file. Keep turns under the inline limit.
 
-**Gemini** — prefer the Flash model: Pro was weaker and slower on these tasks.
+**Gemini** — prefer the Flash model: the user found Pro weaker and slower on
+these tasks (their observation, not a benchmark).
 The model choice is account-wide, so parallel Gemini runs with different
 `--model` values overwrite each other's default (wchat re-selects before every
 send). Refusal `BardErrorInfo [1095]` is reported as `rate_limited`.
@@ -107,7 +134,12 @@ K3/K2.8 need a paid plan. Use `--model instant` if you must.
 
 ## When a run fails
 
-Read the run's status and its raw capture before blaming the model: `rate_limited`
-(exit 6) is the site refusing; "content filter" is the brief; an answer that
-says "I don't see a task" is results that went out as an attachment (rules 2-3);
-many rounds of reads with no edit is a brief too big (rule 4).
+Investigate before rewriting the brief: read the run status, its log, the raw
+capture it names, and if needed the conversation in the page. Causes seen so
+far, none of them certain from the symptom alone: `rate_limited` (exit 6) —
+the site refused (quota, overload, account block); "content filter" — the site
+moderated the prompt or the model's output; "I don't see a task" — often the
+results went out as an attachment (rules 2-3), but also seen with a bad upload
+note; many rounds of reads and no edit — often a brief too big (rule 4). wchat
+itself has had delivery bugs that looked like model failures; the capture
+tells them apart.
