@@ -16,7 +16,7 @@ anecdote is marked as one.
 The order in which to try providers is each project's decision: follow the
 project's own team/roster file, and ask the user before changing it. This
 skill does not set it. Do not dispatch to a provider the user has put on hold
-(currently Kimi, for this user).
+(currently Kimi and MiMo, for this user).
 
 ## Rules for every provider
 
@@ -99,7 +99,8 @@ runs at a time and do not resume into a block. It follows "stop and report if X"
 literally, which is what you want. For read-only review, run it on a `git
 clone` in a scratch directory: wchat has no read-only mode.
 
-**MiMo** (Xiaomi MiMo AI Studio) — has a content filter that checks the prompt
+**MiMo** (Xiaomi MiMo AI Studio) — on hold for this user (2026-09-27) until MiMo
+ships new models: not reliable enough. It has a content filter that checks the prompt
 AND the model's own output (`event:sensitive_query`, reported by wchat 0.12.1+
 as "MiMo refused the turn (content filter ...)"). Observed 2026-09-26 on two
 runs of the same task: (1) the reply was cut in the middle of the model's
