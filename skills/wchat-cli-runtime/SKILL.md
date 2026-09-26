@@ -35,6 +35,9 @@ refused before anything is created. `wchat` itself accepts
 
 ## Kimi is an unverified provider (wchat 0.9.0+); MiMo is supported (0.12.0+)
 
+How to write the task text and which provider traps to avoid: see the
+`wchat-task-briefing` skill.
+
 `kimi` has run for real (a one-shot ask, a named session, an agent reading files
 through c2c) but its delivery is not yet measured, so wchat refuses it unless the
 agent options carry `--unverified-provider`, and it prints a warning to stderr on
