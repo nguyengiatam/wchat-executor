@@ -33,7 +33,7 @@ resume, the provider must match the run's recorded provider, or the dispatch is
 refused before anything is created. `wchat` itself accepts
 `--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi,mimo}`.
 
-## Kimi and MiMo are unverified providers (wchat 0.9.0+ / 0.10.0+)
+## Kimi is an unverified provider (wchat 0.9.0+); MiMo is supported (0.12.0+)
 
 `kimi` has run for real (a one-shot ask, a named session, an agent reading files
 through c2c) but its delivery is not yet measured, so wchat refuses it unless the
@@ -50,12 +50,10 @@ free account. Kimi keeps the composer draft, attached file
 cards included, across tabs: a failed turn can leave cards that get sent with the
 next turn.
 
-`mimo` (Xiaomi MiMo AI Studio, wchat 0.10.0+) is unverified the same way: pass
-`--unverified-provider` on every start and resume. From wchat 0.11.0 it takes
-`--model pro|flash`; it has no thinking control, so `--thinking` is refused. The free
-plan has a daily token limit. When a turn's ops results are too long and go as an
-attached file, MiMo tends to treat the file as reference material and lose the task
-(it may re-read files or `task.md` before answering) - keep MiMo tasks small.
+`mimo` (Xiaomi MiMo AI Studio) shipped unverified in wchat 0.10.0 and is agent-supported
+from 0.12.0 (delivery measured live, inline and as an upload), so `--unverified-provider`
+is no longer needed. It takes `--model pro|flash` (0.11.0+); it has no thinking control,
+so `--thinking` is refused. The free plan has a daily token limit.
 
 ## Model and thinking mode (wchat 0.9.0+)
 
