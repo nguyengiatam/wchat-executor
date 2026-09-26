@@ -31,9 +31,9 @@ lets the script feed that file to `start`'s stdin.
 Every dispatch names its provider; there is no default and no fallback. On a
 resume, the provider must match the run's recorded provider, or the dispatch is
 refused before anything is created. `wchat` itself accepts
-`--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi}`.
+`--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi,mimo}`.
 
-## Kimi is an unverified provider (wchat 0.9.0+)
+## Kimi and MiMo are unverified providers (wchat 0.9.0+ / 0.10.0+)
 
 `kimi` has run for real (a one-shot ask, a named session, an agent reading files
 through c2c) but its delivery is not yet measured, so wchat refuses it unless the
@@ -42,15 +42,25 @@ every run. The flag is not remembered by the run: pass it again on a resume
 (`exec --provider kimi --resume <run> -- --unverified-provider`). On wchat main
 after 0.9.0, Kimi takes `--model k3|k2.8|instant` and `--thinking
 standard|advanced|max` (`max` spends extra credits). K3 and K2.8 may need a paid
-Kimi plan: the run then fails with "this Kimi model requires an upgraded Kimi plan
-(paywall)", so `instant` is the safe choice on a free account. Kimi keeps the composer draft, attached file
+Kimi plan, and at peak hours Kimi refuses free accounts on every model: since wchat
+0.10.0 the run then ends `rate_limited` (exit 6) with "Kimi is overloaded and is
+refusing free-plan requests right now (REASON_SERVER_OVERLOADED_FOR_FREE_USER); retry
+later" - dispatch again later or use another provider. `instant` is the safe model on a
+free account. Kimi keeps the composer draft, attached file
 cards included, across tabs: a failed turn can leave cards that get sent with the
 next turn.
 
+`mimo` (Xiaomi MiMo AI Studio, wchat 0.10.0+) is unverified the same way: pass
+`--unverified-provider` on every start and resume. From wchat 0.11.0 it takes
+`--model pro|flash`; it has no thinking control, so `--thinking` is refused. The free
+plan has a daily token limit. When a turn's ops results are too long and go as an
+attached file, MiMo tends to treat the file as reference material and lose the task
+(it may re-read files or `task.md` before answering) - keep MiMo tasks small.
+
 ## Model and thinking mode (wchat 0.9.0+)
 
-`--model` and `--thinking` go to `start` as agent options. Only gemini, qwen, zai
-and kimi accept them (`--thinking`: gemini, qwen, zai, kimi); any other provider is refused before
+`--model` and `--thinking` go to `start` as agent options. Only gemini, qwen, zai,
+kimi and mimo accept `--model` (`--thinking`: gemini, qwen, zai, kimi); any other provider is refused before
 anything is sent. A model the page does not offer is **not** an error: the run
 uses the page's own model and stderr says `model '<asked>' not available`. Names
 match an id, the menu label, the site id, an alias (`pro`, `flash`, `max`) or the
