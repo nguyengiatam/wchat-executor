@@ -151,3 +151,17 @@ results went out as an attachment (rules 2-3), but also seen with a bad upload
 note; many rounds of reads and no edit — often a brief too big (rule 4). wchat
 itself has had delivery bugs that looked like model failures; the capture
 tells them apart.
+
+A run that ends `done` with no edits is not a delivery failure until shown to
+be: read the model's final answer in `result` first. On ChatGPT a log line
+`loadingFailed ... net::ERR_ABORTED canceled=True` on every turn is normal —
+the page closes the stream after reading it to `[DONE]`, and wchat takes the
+whole reply from the network (wchat after 2026-09-27 logs it as "the page
+closed the stream after the whole reply was read"). It is not caused by other
+runs sharing the browser. Measured 2026-09-27: three ChatGPT runs with that
+line on every turn received every reply in full; they stopped because the
+model read an attached results file as a user message with no request in it
+("the file contains no new action request", "this session has no shell tool")
+and answered in prose. wchat now frames each results turn; if a model still
+stops that way, resend the task in the same session rather than blaming the
+transport.
