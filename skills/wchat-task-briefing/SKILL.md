@@ -57,7 +57,7 @@ skill does not set it. Do not dispatch to a provider the user has put on hold
    exhausted local TCP ports and the shared browser was restarted under every
    other run.
 
-## Inline limits (wchat 0.12.1)
+## Inline limits (wchat 0.13.0)
 
 Results over either limit go as an attached file. Source: each provider's
 `capabilities` in `wchat/provider/<name>.py` (`max_inline_lines`,
@@ -73,6 +73,7 @@ Results over either limit go as an attached file. Source: each provider's
 | zai | 400 | 200,000 | supported |
 | mimo | 1000 | 100,000 | supported (0.12.0+) |
 | kimi | 400 | 200,000 | unverified (`--unverified-provider`) |
+| sakana | 400 | 100,000 | supported (0.13.0+) |
 
 ## Per-provider notes
 
@@ -135,6 +136,15 @@ send). Refusal `BardErrorInfo [1095]` is reported as `rate_limited`.
 Z.ai's Deep Think control is hidden in wchat's small window (`--thinking` may
 not apply) and it refuses at peak hours with `MODEL_CONCURRENCY_LIMIT`
 (`rate_limited`).
+
+**Sakana** (chat.sakana.ai) — added 2026-09-28. Passed the capability tests
+(c2c on every turn, continued after an attached results turn, fixed code, ran
+tests and committed through shell) and the delivery measurements. Budgets are in
+USD per model: Fugu Max ~6.25 USD/week, Namazu 12.5 USD/day, so prefer
+`--model namazu` for long runs; wchat stops a run `rate_limited` before sending
+when the budget is spent. When the results go as an attachment, the site's model
+reads it with its own `extract_file` tool first; that is expected. Little run
+history beyond the measurements yet.
 
 **Kimi** — on hold for this user (2026-09-26): free accounts are refused at
 peak hours on every model (`REASON_SERVER_OVERLOADED_FOR_FREE_USER`, exit 6);

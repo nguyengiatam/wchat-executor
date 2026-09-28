@@ -31,9 +31,9 @@ lets the script feed that file to `start`'s stdin.
 Every dispatch names its provider; there is no default and no fallback. On a
 resume, the provider must match the run's recorded provider, or the dispatch is
 refused before anything is created. `wchat` itself accepts
-`--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi,mimo}`.
+`--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi,mimo,sakana}`.
 
-## Kimi is an unverified provider (wchat 0.9.0+); MiMo is supported (0.12.0+)
+## Kimi is an unverified provider (wchat 0.9.0+); MiMo (0.12.0+) and Sakana (0.13.0+) are supported
 
 How to write the task text and which provider traps to avoid: see the
 `wchat-task-briefing` skill.
@@ -58,10 +58,20 @@ from 0.12.0 (delivery measured live, inline and as an upload), so `--unverified-
 is no longer needed. It takes `--model pro|flash` (0.11.0+); it has no thinking control,
 so `--thinking` is refused. The free plan has a daily token limit.
 
+`sakana` (Sakana Chat, chat.sakana.ai) is agent-supported from wchat 0.13.0 (delivery
+measured live, inline and as an upload). `--model fugu-max|namazu` (aliases `max`,
+`fugu`, `namazu`; Fugu Max is the default); no thinking control, so `--thinking` is
+refused. Each model has a USD budget on the site: Fugu Max about 6.25 USD a week,
+Namazu 12.5 USD a day, so long runs belong on Namazu (it follows Vietnamese and
+English instructions despite the site calling it Japanese-focused). Before every
+turn wchat switches the site's Web search off and reads it back (if it cannot, the
+turn is not sent), and reads the model's budget: a spent budget ends the run
+`rate_limited` (exit 6) before anything is sent. The Stop control is not used.
+
 ## Model and thinking mode (wchat 0.9.0+)
 
 `--model` and `--thinking` go to `start` as agent options. Only gemini, qwen, zai,
-kimi and mimo accept `--model` (`--thinking`: gemini, qwen, zai, kimi); any other provider is refused before
+kimi, mimo and sakana accept `--model` (`--thinking`: gemini, qwen, zai, kimi); any other provider is refused before
 anything is sent. A model the page does not offer is **not** an error: the run
 uses the page's own model and stderr says `model '<asked>' not available`. Names
 match an id, the menu label, the site id, an alias (`pro`, `flash`, `max`) or the
