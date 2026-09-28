@@ -142,7 +142,10 @@ not apply) and it refuses at peak hours with `MODEL_CONCURRENCY_LIMIT`
 tests and committed through shell) and the delivery measurements. Budgets are in
 USD per model: Fugu Max ~6.25 USD/week, Namazu 12.5 USD/day, so prefer
 `--model namazu` for long runs; wchat stops a run `rate_limited` before sending
-when the budget is spent. When the results go as an attachment, the site's model
+when the budget is spent. Run `wchat quota sakana` before dispatching: a run that
+hits the budget midway stops `rate_limited`, so give a nearly spent model only a
+small task, or another provider. Measured cost: a short turn ~0.01-0.03 USD; a
+day of probing and ~15 short agent runs used ~0.37 USD on Namazu. When the results go as an attachment, the site's model
 reads it with its own `extract_file` tool first; that is expected. Little run
 history beyond the measurements yet.
 

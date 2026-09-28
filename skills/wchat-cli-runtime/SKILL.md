@@ -66,7 +66,19 @@ Namazu 12.5 USD a day, so long runs belong on Namazu (it follows Vietnamese and
 English instructions despite the site calling it Japanese-focused). Before every
 turn wchat switches the site's Web search off and reads it back (if it cannot, the
 turn is not sent), and reads the model's budget: a spent budget ends the run
-`rate_limited` (exit 6) before anything is sent. The Stop control is not used.
+`rate_limited` (exit 6) before anything is sent, and each turn logs one line
+`wchat: sakana quota: <model> ...; remaining $N`. The Stop control is not used.
+
+Check the budget BEFORE dispatching to Sakana (wchat 0.14.0+), read-only, sends
+nothing:
+
+    wchat quota sakana            # one line per model: remaining / limit / used
+    wchat quota sakana --json     # raw numbers
+
+Exit 0 = every model's budget read; 6 = a model is spent (LIMITED); 1 = a budget
+could not be established (treat it as not available); 2 = the provider has no
+quota endpoint. Only Sakana reports one; ChatGPT and DeepSeek have no quota
+endpoint and are practically unbounded for this use.
 
 ## Model and thinking mode (wchat 0.9.0+)
 
