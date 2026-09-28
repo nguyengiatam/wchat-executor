@@ -287,9 +287,14 @@ def result_run(args):
             code = item.get("exit")
             state = item.get("status")
             if code is None:
-                print("  {}: exit: null; status: {}".format(item.get("cmd"), state or "unknown"))
+                line = "  {}: exit: null; status: {}".format(item.get("cmd"), state or "unknown")
             else:
-                print("  {}: exit: {}; status: {}".format(item.get("cmd"), code, state))
+                line = "  {}: exit: {}; status: {}".format(item.get("cmd"), code, state)
+            # wchat 0.14.1+ says why a command never ran; without it a refusal
+            # reads like a timeout or a crash.
+            if item.get("error"):
+                line += "; why: " + " ".join(str(item["error"]).split())
+            print(line)
     else:
         print("  no shell command records")
     print("Final answer:")

@@ -151,6 +151,11 @@ directory name does not say which providers are logged in.
   - `rate_limited` — wchat refuses to resume it; dispatch a new run with `exec`.
 - **`--resume` carries no new task.** wchat ignores stdin on a resume, so the
   plugin refuses `--resume` combined with a task file.
+- **A shell command with `status: not run` never ran** (wchat 0.14.1+). The
+  `why:` after it is the reason: `refused: ...` (wchat's scope rules),
+  `refused by hook: ...`, or the user declined. It is not a timeout and not a
+  crash; the run log has the same line (`wchat: <cmd> not run: <why>`). Older
+  wchat shows such a command as `exit: null; status: unknown` with no reason.
 - **Sending cadence.** A run with no keyboard sends on a roughly 20-second
   cadence, and a long run costs real wall-clock time. Do not poll; start `wait`
   once and let the harness wake the session.

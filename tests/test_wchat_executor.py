@@ -298,6 +298,17 @@ class ExecutorContract(unittest.TestCase):
             self.assertIn(required, p.stdout)
         self.assertNotIn("no commit", p.stdout)
 
+    def test_result_says_why_a_shell_command_never_ran(self):
+        self.scenario(result={"out": {"schema": 1, "run": "r123", "status": "done",
+            "git": {"available": True, "commits": [], "bounded": True},
+            "shell": [{"cmd": "git push origin main", "exit": None, "status": "not run",
+                       "error": "refused: publishing is out of scope for this task."}],
+            "answer": None}})
+        p = self.call("result", "r123")
+        self.assertEqual(0, p.returncode, p.stderr)
+        self.assertIn("git push origin main: exit: null; status: not run; "
+                      "why: refused: publishing is out of scope for this task.", p.stdout)
+
     def test_resume_requires_provider(self):
         p = self.call("exec", "--resume", "r123")
         self.assertEqual(2, p.returncode)
