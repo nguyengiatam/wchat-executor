@@ -84,7 +84,9 @@ M3.1-Flash-Preview by default (`--model flash`); also `m3`, `m2.7`,
 first run. Clear chat preserves the source history and gives each run its own
 conversation. Large prompts are uploaded; the model must read the attachment
 with its own file tool, not ask wchat to read `/workspace/attachments/...`.
-wchat supplies that instruction. Credit lookup and provider Stop are unavailable.
+wchat supplies that instruction. Provider Stop is unavailable. Check credits
+with `wchat quota minimax` before dispatching (wchat 0.16.0+); a c2c turn costs
+~0-1 credit, and runs do not check the balance themselves.
 
 
 **DeepSeek** — fast on small, well-pointed tasks (~10-15 min). Needs the

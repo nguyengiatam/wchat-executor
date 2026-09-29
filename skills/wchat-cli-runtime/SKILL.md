@@ -74,11 +74,14 @@ nothing:
 
     wchat quota sakana            # one line per model: remaining / limit / used
     wchat quota sakana --json     # raw numbers
+    wchat quota minimax           # credit balance (wchat 0.16.0+)
+    wchat quota                   # every provider that reports one
 
-Exit 0 = every model's budget read; 6 = a model is spent (LIMITED); 1 = a budget
-could not be established (treat it as not available); 2 = the provider has no
-quota endpoint. Only Sakana reports one; ChatGPT and DeepSeek have no quota
-endpoint and are practically unbounded for this use.
+Exit 0 = every budget read; 6 = a model is spent or MiniMax credits are at or
+below zero (LIMITED); 1 = a budget could not be established (treat it as not
+available); 2 = the provider has no quota endpoint. Sakana and MiniMax report
+one; ChatGPT and DeepSeek have no quota endpoint and are practically unbounded
+for this use.
 
 ## MiniMax Agent (wchat 0.15.0+)
 
@@ -87,7 +90,9 @@ Sign in at `agent.minimax.io` in wchat's browser profile and open the **General*
 agent once. Each new run uses Clear chat to create its own conversation while
 preserving the source history; resumed runs keep their conversation.
 Models: `m3.1-flash` (default, alias `flash`), `m3`, `m2.7`, `m2.7-highspeed`.
-There is no `--thinking`, credit lookup, live draft, or provider Stop support.
+There is no `--thinking`, live draft, or provider Stop support. Runs do not
+check credits before a turn; run `wchat quota minimax` before dispatching
+(wchat 0.16.0+; it opens the account menu in a tab of its own, sends nothing).
 Concurrent runs and a 106 KB uploaded prompt were verified on 2026-09-29.
 
 ## Model and thinking mode (wchat 0.9.0+)
