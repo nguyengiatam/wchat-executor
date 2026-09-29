@@ -31,7 +31,7 @@ lets the script feed that file to `start`'s stdin.
 Every dispatch names its provider; there is no default and no fallback. On a
 resume, the provider must match the run's recorded provider, or the dispatch is
 refused before anything is created. `wchat` itself accepts
-`--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi,mimo,sakana}`.
+`--provider {chatgpt,gemini,grok,deepseek,qwen,zai,kimi,mimo,sakana,minimax}`.
 
 ## Kimi is an unverified provider (wchat 0.9.0+); MiMo (0.12.0+) and Sakana (0.13.0+) are supported
 
@@ -80,10 +80,20 @@ could not be established (treat it as not available); 2 = the provider has no
 quota endpoint. Only Sakana reports one; ChatGPT and DeepSeek have no quota
 endpoint and are practically unbounded for this use.
 
+## MiniMax Agent (wchat 0.15.0+)
+
+`minimax` is agent-supported: no `--unverified-provider` flag is needed.
+Sign in at `agent.minimax.io` in wchat's browser profile and open the **General**
+agent once. Each new run uses Clear chat to create its own conversation while
+preserving the source history; resumed runs keep their conversation.
+Models: `m3.1-flash` (default, alias `flash`), `m3`, `m2.7`, `m2.7-highspeed`.
+There is no `--thinking`, credit lookup, live draft, or provider Stop support.
+Concurrent runs and a 106 KB uploaded prompt were verified on 2026-09-29.
+
 ## Model and thinking mode (wchat 0.9.0+)
 
 `--model` and `--thinking` go to `start` as agent options. Only gemini, qwen, zai,
-kimi, mimo and sakana accept `--model` (`--thinking`: gemini, qwen, zai, kimi); any other provider is refused before
+kimi, mimo, sakana and minimax accept `--model` (`--thinking`: gemini, qwen, zai, kimi); any other provider is refused before
 anything is sent. A model the page does not offer is **not** an error: the run
 uses the page's own model and stderr says `model '<asked>' not available`. Names
 match an id, the menu label, the site id, an alias (`pro`, `flash`, `max`) or the

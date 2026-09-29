@@ -74,8 +74,18 @@ Results over either limit go as an attached file. Source: each provider's
 | mimo | 1000 | 100,000 | supported (0.12.0+) |
 | kimi | 400 | 200,000 | unverified (`--unverified-provider`) |
 | sakana | 400 | 100,000 | supported (0.13.0+) |
+| minimax | 600 | 80,000 | supported (0.15.0+) |
 
 ## Per-provider notes
+
+**MiniMax** (`agent.minimax.io`, wchat 0.15.0+) — uses the General agent,
+M3.1-Flash-Preview by default (`--model flash`); also `m3`, `m2.7`,
+`m2.7-highspeed`. Open General once in the signed-in wchat browser before the
+first run. Clear chat preserves the source history and gives each run its own
+conversation. Large prompts are uploaded; the model must read the attachment
+with its own file tool, not ask wchat to read `/workspace/attachments/...`.
+wchat supplies that instruction. Credit lookup and provider Stop are unavailable.
+
 
 **DeepSeek** — fast on small, well-pointed tasks (~10-15 min). Needs the
 small-edit-turn rule (5). Put this sentence in every DeepSeek brief: "Every
