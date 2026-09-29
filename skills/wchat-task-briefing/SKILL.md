@@ -16,7 +16,7 @@ anecdote is marked as one.
 The order in which to try providers is each project's decision: follow the
 project's own team/roster file, and ask the user before changing it. This
 skill does not set it. Do not dispatch to a provider the user has put on hold
-(currently Kimi and MiMo, for this user).
+(currently Kimi, MiMo and MiniMax, for this user).
 
 ## Rules for every provider
 
@@ -78,7 +78,10 @@ Results over either limit go as an attached file. Source: each provider's
 
 ## Per-provider notes
 
-**MiniMax** (`agent.minimax.io`, wchat 0.15.0+) — uses the General agent,
+**MiniMax** (`agent.minimax.io`, wchat 0.15.0+) — on hold for this user (2026-09-29): after the first turn
+the site's UI often sticks on "Processing" with Stop shown and polls `/resume` forever although the server has
+finished the turn; the next turn goes to `/queue` or is not tracked, and wchat waits silently until its timeout.
+Do not dispatch until the user reopens it. Uses the General agent,
 M3.1-Flash-Preview by default (`--model flash`); also `m3`, `m2.7`,
 `m2.7-highspeed`. Open General once in the signed-in wchat browser before the
 first run. Clear chat preserves the source history and gives each run its own
