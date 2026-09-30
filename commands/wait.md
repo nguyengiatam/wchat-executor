@@ -28,4 +28,8 @@ step the script printed and let the user decide:
 - `stopped`, `retryable` — `exec --provider <same provider> --resume <run>`;
 - `needs_human` — inspect the conversation first; resume only if the turn or
   operation had no effect;
-- `rate_limited` — wchat will not resume it; a new `exec` is the only way on.
+- `rate_limited` — follow the line the script printed. `resumable: true`
+  (wchat 0.18.1+) means nothing was sent and the run is paused: out of uploads
+  ⇒ `exec --provider <same> --resume <run> -- --no-upload`; any other quota ⇒
+  resume the same way without the flag once it resets. Not resumable ⇒ a new
+  `exec` is the only way on.

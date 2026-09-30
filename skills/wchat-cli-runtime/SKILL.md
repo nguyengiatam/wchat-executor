@@ -14,7 +14,7 @@ truth for the flags, the statuses, and the traps.
 ```
 wchat run start  [--provider P] [--workspace DIR] [--resume RUN] [--max-rounds N]
                  [--session S] [--new] [--on-sleep {pause,keep,fail}]
-                 [--model M] [--thinking T] [--json]
+                 [--model M] [--thinking T] [--no-upload] [--json]
 wchat run status RUN [--json]
 wchat run wait   RUN [--json] [--timeout S]
 wchat run result RUN [--json]
@@ -95,6 +95,33 @@ check credits before a turn; run `wchat quota minimax` before dispatching
 (wchat 0.16.0+; it opens the account menu in a tab of its own, sends nothing).
 Concurrent runs and a 106 KB uploaded prompt were verified on 2026-09-29.
 
+## No-upload mode (wchat 0.18.0+)
+
+A turn over the provider's inline limits (see the table in
+`wchat-task-briefing`) normally goes as an uploaded file. ChatGPT has a
+time-limited upload quota: when it is spent the page drops the file, the run
+stops `rate_limited` and the error says `this account cannot upload right now
+... Resume with --no-upload`, while ordinary chat still works.
+
+`--no-upload` (an agent option, after `--`) makes the run never upload: a turn
+too long for one message is typed as up to 20 parts, each answered with a short
+`OK`, then one turn asks for the answer. It covers every turn, the opening
+briefing and task included. The run's checkpoint keeps the mode, so later
+resumes need not repeat the flag.
+
+- **Use it** when the account is out of uploads: resume the stopped run with
+  `exec --provider chatgpt --resume <run> -- --no-upload` (wchat 0.18.1+; the
+  status JSON shows `resumable: true`), or start new ChatGPT runs with
+  `-- --no-upload` until the quota resets (the error names the wait in minutes).
+- **Cost:** a turn split into k parts is k+1 messages on the site, while
+  `--max-rounds` counts it as one round. Keep long results out of turns
+  (briefing rule: long output to a file) so few turns need splitting.
+- A turn that would need more than 20 parts stops the run with an error saying
+  so; a skill that declares resource files is refused in this mode.
+- Verified live on ChatGPT 2026-09-30 while the account was out of uploads: a
+  357-line opening turn went as typed parts, the run read a file through c2c
+  and finished `done` with the right answer.
+
 ## Model and thinking mode (wchat 0.9.0+)
 
 `--model` and `--thinking` go to `start` as agent options. Only gemini, qwen, zai,
@@ -163,7 +190,12 @@ directory name does not say which providers are logged in.
   - `stopped`, `retryable` — `exec --provider <same> --resume <run>`;
   - `needs_human` — inspect the conversation first; only if the turn or
     operation had no effect, `exec --provider <same> --resume <run>`;
-  - `rate_limited` — wchat refuses to resume it; dispatch a new run with `exec`.
+  - `rate_limited` — read `resumable` in the status JSON (wchat 0.18.1+).
+    `true`: the turn was refused before it was sent, the run is paused and
+    resumes from that turn. If `error` says the account "cannot upload", resume
+    with `exec --provider <same> --resume <run> -- --no-upload`; otherwise wait
+    for the quota and `exec --provider <same> --resume <run>`. `false` (or
+    older wchat): wchat refuses to resume it; dispatch a new run with `exec`.
 - **`--resume` carries no new task.** wchat ignores stdin on a resume, so the
   plugin refuses `--resume` combined with a task file.
 - **A shell command with `status: timed out` ran and was stopped at its

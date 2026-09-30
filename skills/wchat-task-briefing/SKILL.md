@@ -67,7 +67,9 @@ skill does not set it. Do not dispatch to a provider the user has put on hold
 
 ## Inline limits (wchat 0.13.0)
 
-Results over either limit go as an attached file. Source: each provider's
+Results over either limit go as an attached file, or with `--no-upload`
+(wchat 0.18.0+) as up to 20 typed parts, one message each plus one; see
+`wchat-cli-runtime` "No-upload mode". Source: each provider's
 `capabilities` in `wchat/provider/<name>.py` (`max_inline_lines`,
 `max_inline_prompt`); check your installed version if it differs.
 
@@ -119,7 +121,12 @@ delivery failure after wchat 0.9.1). wchat runs ChatGPT in parallel, but the
 account does not like it: on 2026-09-25 several simultaneous ChatGPT runs with
 many uploads got the account temporarily blocked ("unusual activity", >15
 min, every retry failed; wchat reports `rate_limited`). Keep to 1-2 ChatGPT
-runs at a time and do not resume into a block. It follows "stop and report if X" rules
+runs at a time and do not resume into a block. ChatGPT also has a
+time-limited **upload** quota: when the error says "cannot upload right now",
+resume with `-- --no-upload` (wchat 0.18.1+) and give new ChatGPT runs the same
+flag until the quota resets; the opening turn (a ~106-line briefing plus your
+task) is itself over the 200-line limit whenever the task is longer than about
+90 lines. It follows "stop and report if X" rules
 literally, which is what you want. For read-only review, run it on a `git
 clone` in a scratch directory: wchat has no read-only mode.
 

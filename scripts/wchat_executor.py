@@ -250,8 +250,21 @@ def wait_run(args):
         print("Needs a human to check the conversation first; if you are sure the turn/action had no effect, resume manually: "
               "exec --provider {} --resume {}. Do not re-dispatch.".format(value.get("provider"), args.run))
     elif value.get("status") == "rate_limited":
-        print("Provider rate-limited; this run cannot be resumed — dispatch a new run with exec when you want. "
-              "Do not re-dispatch.")
+        provider = value.get("provider")
+        error = value.get("error")
+        if isinstance(error, str) and error:
+            print("Error: " + " ".join(error.split())[:300])
+        if value.get("resumable") is True and isinstance(provider, str) and PROVIDER.fullmatch(provider):
+            # wchat 0.18.1+: a refusal proven not sent pauses the run instead of ending it.
+            if isinstance(error, str) and "cannot upload" in error:
+                print("Out of uploads; nothing was sent. Resume without uploads: "
+                      "exec --provider {} --resume {} -- --no-upload".format(provider, args.run))
+            else:
+                print("Refused before sending; nothing was sent. When the quota allows, resume: "
+                      "exec --provider {} --resume {}".format(provider, args.run))
+        else:
+            print("Provider rate-limited; this run cannot be resumed — dispatch a new run with exec when you want. "
+                  "Do not re-dispatch.")
     else:
         print("Check the result: result {}".format(args.run))
     return response.returncode

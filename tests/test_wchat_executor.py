@@ -254,6 +254,24 @@ class ExecutorContract(unittest.TestCase):
         self.assertIn("check the conversation", p.stdout)
         self.assertIn("exec --provider deepseek --resume r123", p.stdout)
 
+    def test_wait_rate_limited_upload_quota_resumes_with_no_upload(self):
+        self.scenario(wait={"code": 6, "out": {
+            "schema": 1, "run": "r123", "status": "rate_limited", "provider": "chatgpt",
+            "resumable": True,
+            "error": "this account cannot upload right now - the page says: limit"}})
+        p = self.call("wait", "r123")
+        self.assertEqual(6, p.returncode)
+        self.assertIn("exec --provider chatgpt --resume r123 -- --no-upload", p.stdout)
+        self.assertNotIn("new run", p.stdout)
+
+    def test_wait_rate_limited_other_quota_resumes_without_the_flag(self):
+        self.scenario(wait={"code": 6, "out": {
+            "schema": 1, "run": "r123", "status": "rate_limited", "provider": "sakana",
+            "resumable": True, "error": "sakana quota limited: weekly budget spent"}})
+        p = self.call("wait", "r123")
+        self.assertIn("exec --provider sakana --resume r123", p.stdout)
+        self.assertNotIn("--no-upload", p.stdout)
+
     def test_wait_timeout_seven_is_still_running(self):
         self.scenario(wait={"code": 7, "out": {"schema": 1, "run": "r123", "status": "running"}})
         p = self.call("wait", "r123")
