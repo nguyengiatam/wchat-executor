@@ -56,6 +56,14 @@ skill does not set it. Do not dispatch to a provider the user has put on hold
    Measured 2026-09-26: a watcher polling `/json/list` without sleeping
    exhausted local TCP ports and the shared browser was restarted under every
    other run.
+10. **Commands that end on their own.** A shell op waits for its command to
+    exit, up to the op's `timeout` (120 s by default, 900 s at most). A test
+    runner, server or watcher that keeps a handle open holds the op until then,
+    and that time is spent for nothing. Ask for commands that exit by themselves: the test
+    tool's own option to exit when the tests finish, an explicit `timeout`,
+    and cleanup of whatever a test starts. Ask for long output to be written
+    to a file and then read in slices. A command piped into `tail`/`head`
+    prints nothing if it never ends.
 
 ## Inline limits (wchat 0.13.0)
 

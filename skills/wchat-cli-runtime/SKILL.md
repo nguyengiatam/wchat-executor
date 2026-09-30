@@ -166,6 +166,15 @@ directory name does not say which providers are logged in.
   - `rate_limited` — wchat refuses to resume it; dispatch a new run with `exec`.
 - **`--resume` carries no new task.** wchat ignores stdin on a resume, so the
   plugin refuses `--resume` combined with a task file.
+- **A shell command with `status: timed out` ran and was stopped at its
+  `timeout`** (wchat 0.17.0+). Every process it started was gone, so the
+  model got the timeout and the output printed before it, and the run went on.
+  Only a timeout that leaves a process behind still ends `needs_human`. Older
+  wchat stops the run on every shell timeout.
+- **A turn the provider left without a reply is recovered in the run** (wchat
+  0.17.0+). When the turn is in the conversation and the page is idle with
+  no reply, wchat asks the model for its reply again instead of ending
+  `needs_human`. It never resends the turn itself.
 - **A shell command with `status: not run` never ran** (wchat 0.14.1+). The
   `why:` after it is the reason: `refused: ...` (wchat's scope rules),
   `refused by hook: ...`, or the user declined. It is not a timeout and not a
