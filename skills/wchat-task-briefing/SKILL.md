@@ -68,7 +68,7 @@ skill does not set it. Do not dispatch to a provider the user has put on hold
 ## Inline limits (wchat 0.13.0)
 
 Results over either limit go as an attached file, or with `--no-upload`
-(wchat 0.18.0+) as up to 20 typed parts, one message each plus one; see
+(wchat 0.18.0+) as up to 20 typed parts, one message each (0.18.2+); see
 `wchat-cli-runtime` "No-upload mode". Source: each provider's
 `capabilities` in `wchat/provider/<name>.py` (`max_inline_lines`,
 `max_inline_prompt`); check your installed version if it differs.

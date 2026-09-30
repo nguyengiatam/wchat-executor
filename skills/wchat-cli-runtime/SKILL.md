@@ -104,8 +104,10 @@ stops `rate_limited` and the error says `this account cannot upload right now
 ... Resume with --no-upload`, while ordinary chat still works.
 
 `--no-upload` (an agent option, after `--`) makes the run never upload: a turn
-too long for one message is typed as up to 20 parts, each answered with a short
-`OK`, then one turn asks for the answer. It covers every turn, the opening
+too long for one message is typed as up to 20 parts. wchat waits for the reply
+to each part but ignores it; the last part says it is the last and carries the
+turn's marker, and its reply is the answer (wchat 0.18.2+; earlier 0.18.x sent
+a separate closing turn and stopped the run when a part drew a real answer). It covers every turn, the opening
 briefing and task included. The run's checkpoint keeps the mode, so later
 resumes need not repeat the flag.
 
@@ -113,14 +115,17 @@ resumes need not repeat the flag.
   `exec --provider chatgpt --resume <run> -- --no-upload` (wchat 0.18.1+; the
   status JSON shows `resumable: true`), or start new ChatGPT runs with
   `-- --no-upload` until the quota resets (the error names the wait in minutes).
-- **Cost:** a turn split into k parts is k+1 messages on the site, while
+- **Cost:** a turn split into k parts is k messages on the site, while
   `--max-rounds` counts it as one round. Keep long results out of turns
   (briefing rule: long output to a file) so few turns need splitting.
 - A turn that would need more than 20 parts stops the run with an error saying
   so; a skill that declares resource files is refused in this mode.
 - Verified live on ChatGPT 2026-09-30 while the account was out of uploads: a
   357-line opening turn went as typed parts, the run read a file through c2c
-  and finished `done` with the right answer.
+  and finished `done` with the right answer (again on 0.18.2, 5 messages).
+- On wchat 0.18.0-0.18.1 a run could end `retryable` with "part N of N drew a
+  ...-character reply instead of an acknowledgement": ChatGPT answered the
+  last part. Update wchat to 0.18.2 and resume.
 
 ## Model and thinking mode (wchat 0.9.0+)
 
