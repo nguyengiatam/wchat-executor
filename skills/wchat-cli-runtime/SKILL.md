@@ -201,6 +201,10 @@ directory name does not say which providers are logged in.
     with `exec --provider <same> --resume <run> -- --no-upload`; otherwise wait
     for the quota and `exec --provider <same> --resume <run>`. `false` (or
     older wchat): wchat refuses to resume it; dispatch a new run with `exec`.
+    Exception seen on wchat 0.19.2 (2026-10-11): a run refused on its very
+    first turn, before any session existed, reports `resumable: true`, but the
+    resume fails with `session 'agent-<run>' does not exist`. Dispatch a new
+    run with the same task (adding `-- --no-upload` for an upload quota).
 - **`--resume` carries no new task.** wchat ignores stdin on a resume, so the
   plugin refuses `--resume` combined with a task file.
 - **A shell command with `status: timed out` ran and was stopped at its

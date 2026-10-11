@@ -25,15 +25,21 @@ skill does not set it. Do not dispatch to a provider the user has put on hold
    the tests to write, the commands to run, the report shape. Every "go read
    the spec to understand" costs rounds and invites wandering.
 2. **Name the files; forbid orientation reads.** An executor left free reads
-   README, CHANGELOG, git log, whole modules. Say "Read only these" and list
-   files with line ranges. Measured: one run's results ballooned to 25k chars /
-   603 lines from orientation reads, went out as an attachment, and the model
-   concluded "I don't see a task" (webchat-agent LESSONS, 2026-09-22).
-3. **Keep each round's results under the provider's inline limit** (table
-   below). Over it, wchat sends the ops results as an attached file, and
-   several models then lose track of the task. Ask for `head`/`tail`/`grep`,
-   targeted line ranges, and short shell outputs. `--round-chars N` caps the
-   data per round.
+   README, CHANGELOG, git log, whole modules. Name the files the change touches
+   and the ones to start from. Measured: one run's results ballooned to 25k
+   chars / 603 lines from orientation reads, went out as an attachment, and the
+   model concluded "I don't see a task" (webchat-agent LESSONS, 2026-09-22).
+   Name files, not line ranges: how to read them is the executor's call (rule 3).
+3. **Say what to achieve, not how to read.** Put the change and what shows it
+   done first; give context as paths "to open when needed", not a "read this
+   first" section. Never prescribe reading in pieces ("read in slices of 80
+   lines", "read with line ranges"): a whole-file `read` (no `start`/`end`)
+   costs one request, and the briefing wchat sends (after 0.19.2, `62c1879`)
+   says to read whole files. Measured 2026-10-11 on ChatGPT: runs told to read
+   "in pieces of at most 80 lines", with a list of files to read first, read slice after slice for
+   up to 100 rounds and ended with a summary and no edit; the same model given
+   a plain request read whole files, edited, tested and committed in 7 rounds.
+   The current ChatGPT model follows procedure in a brief to the letter.
 4. **Split by the files a change touches, not by requirements.** A brief that
    spans three modules gets read for ten rounds and dies before the first edit.
    One task = one checkpoint = one commit.
@@ -56,14 +62,29 @@ skill does not set it. Do not dispatch to a provider the user has put on hold
    Measured 2026-09-26: a watcher polling `/json/list` without sleeping
    exhausted local TCP ports and the shared browser was restarted under every
    other run.
-10. **Commands that end on their own.** A shell op waits for its command to
+10. **Leave `--round-chars` off unless a run needs it.** It caps the data all
+    of one reply's requests may return. Measured 2026-10-11, ChatGPT runs at
+    `--round-chars 12000`: in one run 45 of 74 reads came back empty and it
+    asked for the same migration nine times without receiving any of it, so
+    it never got far enough to edit. With no cap, a round that goes over the
+    inline limit (table below) goes as one attached file. On ChatGPT that is
+    any result over 200 lines, and uploads are rationed: if the upload quota is
+    the problem, use `--no-upload`, not a small cap. If you need a cap, start at
+    40000 or more (a suggestion, not measured). Before wchat `abdffca` (after 0.19.2), an op the round had no
+    room for came back as `truncated: showing 0 of N characters - narrow the
+    request`, which sends the model narrowing and asking again; from `abdffca`
+    it says `not served: ... request it again in your next c2c block`, and the
+    briefing tells the model the cap.
+11. **Commands that end on their own.** A shell op waits for its command to
     exit, up to the op's `timeout` (120 s by default, 900 s at most). A test
     runner, server or watcher that keeps a handle open holds the op until then,
     and that time is spent for nothing. Ask for commands that exit by themselves: the test
     tool's own option to exit when the tests finish, an explicit `timeout`,
-    and cleanup of whatever a test starts. Ask for long output to be written
-    to a file and then read in slices. A command piped into `tail`/`head`
-    prints nothing if it never ends.
+    and cleanup of whatever a test starts. Ask for long command output to be
+    written to a file and then read with `tail` or `grep`. That rule is for
+    command output only: do not word it so it reaches reading source files
+    (rule 3). A command piped into `tail`/`head` prints nothing if it never
+    ends.
 
 ## Inline limits (wchat 0.13.0)
 
@@ -127,7 +148,8 @@ resume with `-- --no-upload` (wchat 0.18.1+) and give new ChatGPT runs the same
 flag until the quota resets; the opening turn (a ~106-line briefing plus your
 task) is itself over the 200-line limit whenever the task is longer than about
 90 lines. It follows "stop and report if X" rules
-literally, which is what you want. For read-only review, run it on a `git
+literally, which is what you want. It takes procedure just as literally: from
+2026-10-11 a rule about how to read became the whole run (rules 3 and 10). For read-only review, run it on a `git
 clone` in a scratch directory: wchat has no read-only mode.
 
 **MiMo** (Xiaomi MiMo AI Studio) — on hold for this user (2026-09-27) until MiMo
@@ -190,8 +212,13 @@ capture it names, and if needed the conversation in the page. Causes seen so
 far, none of them certain from the symptom alone: `rate_limited` (exit 6) —
 the site refused (quota, overload, account block); "content filter" — the site
 moderated the prompt or the model's output; "I don't see a task" — often the
-results went out as an attachment (rules 2-3), but also seen with a bad upload
-note; many rounds of reads and no edit — often a brief too big (rule 4). wchat
+results went out as an attachment (rule 2), but also seen with a bad upload
+note; many rounds of reads and no edit — a brief too big (rule 4), a brief that
+prescribes how to read (rule 3), or a round cap too small (rule 10). For that
+last one, count the results that came back empty: in `runs.json` (wchat's
+state directory) the run's `completed_operations` carry each op's result, and
+`showing 0 of` or `not served` in a result's `note`/`error` means the cap,
+not the model, withheld it. wchat
 itself has had delivery bugs that looked like model failures; the capture
 tells them apart.
 
