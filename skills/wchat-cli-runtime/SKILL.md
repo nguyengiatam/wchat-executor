@@ -137,6 +137,9 @@ match an id, the menu label, the site id, an alias (`pro`, `flash`, `max`) or th
 last word of a label - `wchat models list` shows them. On Gemini the choice is the
 account's default for every tab, so parallel Gemini runs with different models
 overwrite each other's default (wchat re-selects before every send).
+Gemini runs in the site's Tasks mode on wchat main after 0.19.2 (see
+`wchat-task-briefing`): only `flash` and `argon` exist there and `--thinking`
+is not applied.
 
 ## Parallel runs are normal
 

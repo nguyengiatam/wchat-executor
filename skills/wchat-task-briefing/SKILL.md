@@ -178,8 +178,14 @@ interpreter) instead of answering with a c2c block and loops; `--thinking fast`
 had a send bug on 2026-09-26. It once took an attached file for a workspace
 file. Keep turns under the inline limit.
 
-**Gemini** — prefer the Flash model: the user found Pro weaker and slower on
-these tasks (their observation, not a benchmark).
+**Gemini** — from wchat main after 0.19.2 (commit ff946af) every new Gemini
+conversation runs in the site's Tasks mode ("Nhiệm vụ"); the user found Chat
+mode could barely do the work. Tasks mode offers only Flash and 4 Argon
+(`--model flash` or `argon`; Pro and Flash-Lite fall back to the page's model)
+and has no thinking level, so `--thinking` only prints a warning. If the switch
+cannot be selected the run stops before sending with `gemini page mode failed`.
+A resumed run whose conversation started in Chat mode stays in Chat mode;
+dispatch a new run to get Tasks mode. Argon's quota is small.
 The model choice is account-wide, so parallel Gemini runs with different
 `--model` values overwrite each other's default (wchat re-selects before every
 send). Refusal `BardErrorInfo [1095]` is reported as `rate_limited`.
